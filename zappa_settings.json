@@ -1,0 +1,28 @@
+{
+    "dev": {
+        "app_function": "parser.app",
+        "aws_region": "us-east-1",
+        "exclude": [
+            "boto3",
+            "dateutil",
+            "botocore",
+            "s3transfer",
+            "concurrent"
+        ],
+        "profile_name": "null",
+        "project_name": "zappa-scrapping",
+        "runtime": "python3.10",
+        "s3_bucket": "parcial3-bigdata",
+        "keep_warm": false,
+        "apigateway_enabled": false,
+        "manage_roles": false,
+        "role_name": "LabRole",
+        "events": [
+            {
+                "function": "parser.app",
+                "type": "schedule",
+                "expression": "rate(1 day)"
+            }
+        ]
+    }
+}
