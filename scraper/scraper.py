@@ -10,7 +10,7 @@ def app(event, context):
     now = datetime.utcnow().strftime('%Y-%m-%d')
     urls = {
         'eltiempo': 'https://www.eltiempo.com',
-        'elespectador': 'https://www.elespectador.com'
+        'publimetro': 'https://www.publimetro.co/'
     }
 
     for name, url in urls.items():
