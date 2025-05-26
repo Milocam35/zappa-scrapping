@@ -11,13 +11,12 @@ s3 = boto3.client('s3')
 
 def app(event, context):
     print("==== Evento recibido por Lambda ====")
-    print(json.dumps(event, indent=2))  # Mostrar todo el evento (útil para depuración)
+    print(json.dumps(event, indent=2))
 
     for record in event['Records']:
         bucket = record['s3']['bucket']['name']
         key = urllib.parse.unquote_plus(record['s3']['object']['key'])
 
-        # ✅ Agregar filtro para evitar bucles o archivos no deseados
         if not key.startswith('headlines/raw/') or not key.endswith('.html'):
             print(f"Ignorando archivo no válido para procesamiento: {key}")
             continue
@@ -34,7 +33,14 @@ def app(event, context):
 
         soup = BeautifulSoup(content, 'html.parser')
         nombre_archivo = os.path.basename(key)
-        periodico = "publimetro"
+
+        # ✅ Detectar el periódico por el nombre del archivo
+        if 'publimetro' in nombre_archivo:
+            periodico = 'publimetro'
+        elif 'eltiempo' in nombre_archivo:
+            periodico = 'eltiempo'
+        else:
+            periodico = 'desconocido'
 
         noticias = []
 
@@ -46,7 +52,10 @@ def app(event, context):
                 titular = titular_tag.get_text(strip=True)
                 enlace = enlace_tag['href']
                 if not enlace.startswith('http'):
-                    enlace = f'https://www.publimetro.co{enlace}'
+                    if periodico == 'publimetro':
+                        enlace = f'https://www.publimetro.co{enlace}'
+                    elif periodico == 'eltiempo':
+                        enlace = f'https://www.eltiempo.com{enlace}'
 
                 categoria = ''
                 parts = enlace.split('/')
@@ -67,7 +76,10 @@ def app(event, context):
                     titular = heading.get_text(strip=True)
                     enlace = a_tag['href']
                     if not enlace.startswith('http'):
-                        enlace = f'https://www.publimetro.co{enlace}'
+                        if periodico == 'publimetro':
+                            enlace = f'https://www.publimetro.co{enlace}'
+                        elif periodico == 'eltiempo':
+                            enlace = f'https://www.eltiempo.com{enlace}'
 
                     categoria = ''
                     parts = enlace.split('/')
@@ -80,17 +92,19 @@ def app(event, context):
                         'enlace': enlace
                     })
 
-        print(f"Total de noticias extraídas: {len(noticias)}")
+        print(f"Total de noticias extraídas: {len(noticias)} del periódico {periodico}")
 
         fecha = datetime.utcnow()
         year = fecha.strftime('%Y')
         month = fecha.strftime('%m')
         day = fecha.strftime('%d')
+        hour = fecha.strftime('%H')
+        minute = fecha.strftime('%M')
 
-        csv_key = f"headlines/final/periodico={periodico}/year={year}/month={month}/day={day}/noticias.csv"
+        # ✅ Archivo separado por periódico y minuto
+        csv_key = f"headlines/final/periodico={periodico}/year={year}/month={month}/day={day}/noticias_{hour}-{minute}.csv"
         print(f"Guardando CSV en: {csv_key}")
 
-        # Crear CSV en memoria
         csv_buffer = io.StringIO()
         writer = csv.DictWriter(csv_buffer, fieldnames=['categoria', 'titular', 'enlace'])
         writer.writeheader()
@@ -105,5 +119,5 @@ def app(event, context):
 
     return {
         "statusCode": 200,
-        "body": "Procesamiento completado para Publimetro."
+        "body": f"Procesamiento completado para {periodico}."
     }
