@@ -1,5 +1,5 @@
 {
-    "dev": {
+    "devScraper": {
         "app_function": "scraper.app",
         "aws_region": "us-east-1",
         "exclude": [
@@ -20,7 +20,7 @@
             {
                 "function": "scraper.app",
                 "type": "schedule",
-                "expression": "rate(1 minute)" //rate(1 minute) cron(0 12 * * ? *)
+                "expression": "cron(0 12 * * ? *)" //rate(1 minute) 
             }
         ]
     }
