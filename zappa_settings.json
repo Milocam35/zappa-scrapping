@@ -1,6 +1,6 @@
 {
     "dev": {
-        "app_function": "parser.app",
+        "app_function": "scraper.handler.app",
         "aws_region": "us-east-1",
         "exclude": [
             "boto3",
@@ -9,7 +9,6 @@
             "s3transfer",
             "concurrent"
         ],
-        "profile_name": "null",
         "project_name": "zappa-scrapping",
         "runtime": "python3.10",
         "s3_bucket": "parcial3-bigdata",
@@ -19,9 +18,9 @@
         "role_name": "LabRole",
         "events": [
             {
-                "function": "parser.app",
+                "function": "scraper.handler.app",
                 "type": "schedule",
-                "expression": "rate(1 day)"
+                "expression": "cron(0 12 * * ? *)" //rate(1 minute)
             }
         ]
     }
